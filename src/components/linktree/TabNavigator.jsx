@@ -31,10 +31,10 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
           transform: activeTab === 'shop' ? 'translateX(100%)' : 'translateX(0%)',
         }} />
         {['links', 'shop'].map(tab => (
-          <button key={tab} onClick={() => onSwitch(tab)} style={{
+          <button key={tab} onClick={() => onSwitch(tab)} className="lt-tab-btn" style={{
             position: 'relative', zIndex: 1,
-            padding: '11px 24px', borderRadius: pillRadius,
-            fontSize: '13px', fontWeight: 600,
+            padding: '13px 28px', borderRadius: pillRadius,
+            fontSize: '15px', fontWeight: 600,
             cursor: 'pointer', border: 'none',
             fontFamily: "'Inter', sans-serif",
             background: 'transparent',

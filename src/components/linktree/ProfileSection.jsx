@@ -14,7 +14,7 @@ export default function ProfileSection({ name, bio, theme }) {
       </div>
 
       <div style={{
-        fontSize: '20px', fontWeight: 700, color: text,
+        fontSize: '24px', fontWeight: 700, color: text,
         letterSpacing: '-0.3px', marginBottom: '6px',
         fontFamily: "'Inter', sans-serif",
       }}>
@@ -22,7 +22,7 @@ export default function ProfileSection({ name, bio, theme }) {
       </div>
 
       <div style={{
-        fontSize: '14px', fontWeight: 400, color: text,
+        fontSize: '17px', fontWeight: 400, color: text,
         textAlign: 'center', lineHeight: 1.5, maxWidth: '420px',
         fontFamily: "'Inter', sans-serif",
       }}>

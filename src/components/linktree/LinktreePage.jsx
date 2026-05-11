@@ -110,7 +110,7 @@ function getCardBg(cardBg) {
 }
 
 // ── Inline editable component ────────────────────────────────
-function InlineEdit({ value, onChange, multiline = false, editMode, style = {} }) {
+function InlineEdit({ value, onChange, multiline = false, editMode, className = '', style = {} }) {
   const [editing, setEditing] = useState(false)
   const ref = useRef(null)
 
@@ -122,14 +122,14 @@ function InlineEdit({ value, onChange, multiline = false, editMode, style = {} }
   if (!editMode) {
     if (multiline) {
       return (
-        <div style={style}>
+        <div className={className} style={style}>
           {value.split('\n').map((line, i, arr) => (
             <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
           ))}
         </div>
       )
     }
-    return <div style={style}>{value}</div>
+    return <div className={className} style={style}>{value}</div>
   }
 
   // Edit mode — active input
@@ -174,6 +174,7 @@ function InlineEdit({ value, onChange, multiline = false, editMode, style = {} }
     <div
       onClick={() => setEditing(true)}
       title="Click to edit"
+      className={className}
       style={{
         ...style,
         cursor: 'text',
@@ -241,7 +242,7 @@ export default function LinktreePage({ isOwner = false }) {
   const effectiveCardBgStyle = getCardBg(state.cardBg, theme)
   const effectiveFont      = state.textSettings.font || 'Inter'
   const effectiveTextColor = state.textSettings.color || theme.textColor
-  const effectiveTitleSize = state.textSettings.titleSize === 'large' ? '26px' : '20px'
+  const effectiveTitleSize = state.textSettings.titleSize === 'large' ? '30px' : '24px'
 
   // Extra CSS for wallpaper styles
   let wallpaperExtraStyle = ''
@@ -466,6 +467,14 @@ export default function LinktreePage({ isOwner = false }) {
           .lt-body { padding: 0 !important; align-items: stretch; }
           .lt-card { max-width: 100%; margin: 0; border-radius: 0; }
           .lt-card-content { padding: 24px 16px 40px; }
+          .lt-card-content .lt-profile-name { font-size: 20px !important; }
+          .lt-card-content .lt-profile-bio { font-size: 14px !important; }
+          .lt-card-content .lt-link-label { font-size: 14px !important; }
+          .lt-card-content .lt-link-btn { height: 56px !important; }
+          .lt-card-content .lt-link-icon { width: 38px !important; height: 38px !important; min-width: 38px !important; }
+          .lt-card-content .lt-social-icons { gap: 16px !important; margin: 18px 0 24px !important; }
+          .lt-card-content .lt-social-icons svg { width: 22px !important; height: 22px !important; }
+          .lt-card-content .lt-tab-btn { font-size: 13px !important; padding: 11px 24px !important; }
         }
       `}</style>
 
@@ -696,6 +705,7 @@ export default function LinktreePage({ isOwner = false }) {
               editMode={editMode}
               value={state.profile.name}
               onChange={v => updateProfile('name', v)}
+              className="lt-profile-name"
               style={{
                 fontSize: effectiveTitleSize,
                 fontWeight: 700,
@@ -712,8 +722,9 @@ export default function LinktreePage({ isOwner = false }) {
               value={state.profile.bio}
               onChange={v => updateProfile('bio', v)}
               multiline
+              className="lt-profile-bio"
               style={{
-                fontSize: '14px',
+                fontSize: '17px',
                 fontWeight: 400,
                 color: effectiveTextColor,
                 textAlign: 'center',
@@ -730,6 +741,7 @@ export default function LinktreePage({ isOwner = false }) {
             twitter={state.profile.twitter}
             theme={{ ...theme, textColor: effectiveTextColor }}
             hoverZoom={hz}
+            className="lt-social-icons"
           />
 
           <TabNavigator
@@ -751,12 +763,13 @@ export default function LinktreePage({ isOwner = false }) {
                 return (
                   <div
                     key={link.id}
+                    className="lt-link-btn"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       ...btnStyle,
                       padding: '0 16px',
-                      height: '56px',
+                      height: '64px',
                       position: 'relative',
                       cursor: editMode ? 'default' : 'pointer',
                       textDecoration: 'none',
@@ -767,8 +780,8 @@ export default function LinktreePage({ isOwner = false }) {
                     onClick={!editMode ? () => window.open(link.url, '_blank', 'noopener') : undefined}
                   >
                     {iconCfg && (
-                      <div style={{
-                        width: '38px', height: '38px', minWidth: '38px',
+                      <div className="lt-link-icon" style={{
+                        width: '44px', height: '44px', minWidth: '44px',
                         borderRadius: r,
                         background: iconCfg.bg,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -787,8 +800,9 @@ export default function LinktreePage({ isOwner = false }) {
                         editMode={editMode}
                         value={link.label}
                         onChange={v => updateLink(link.id, 'label', v)}
+                        className="lt-link-label"
                         style={{
-                          fontSize: '14px',
+                          fontSize: '16px',
                           fontWeight: 500,
                           color: state.buttonSettings.style === 'outline' ? effectiveTextColor : btnTextColor,
                           fontFamily: `'${effectiveFont}', sans-serif`,

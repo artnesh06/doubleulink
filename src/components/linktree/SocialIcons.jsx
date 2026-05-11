@@ -1,13 +1,13 @@
-export default function SocialIcons({ instagram, pinterest, twitter, theme, hoverZoom = 1 }) {
+export default function SocialIcons({ instagram, pinterest, twitter, theme, hoverZoom = 1, className = '' }) {
   const color = theme?.textColor || '#ffffff'
-  const iconStyle = { width: '22px', height: '22px', color, cursor: 'pointer', display: 'block' }
+  const iconStyle = { width: '28px', height: '28px', color, cursor: 'pointer', display: 'block' }
   const linkStyle = {
     display: 'inline-flex',
     transition: 'transform 0.2s ease',
   }
 
   return (
-    <div style={{ display: 'flex', gap: '18px', margin: '18px 0 28px', alignItems: 'center', justifyContent: 'center' }}>
+    <div className={className} style={{ display: 'flex', gap: '20px', margin: '24px 0 32px', alignItems: 'center', justifyContent: 'center' }}>
       {instagram && (
         <a href={instagram} target="_blank" rel="noopener noreferrer"
           style={linkStyle}
