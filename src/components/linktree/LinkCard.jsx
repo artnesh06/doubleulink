@@ -46,7 +46,7 @@ export default function LinkCard({ label, url, icon }) {
         background: '#0d0d0d',
         borderRadius: '14px',
         padding: '0 16px',
-        height: '64px',
+        height: '56px',
         width: '100%',
         position: 'relative',
         textDecoration: 'none',
@@ -78,7 +78,7 @@ export default function LinkCard({ label, url, icon }) {
         style={{
           flex: 1,
           textAlign: 'center',
-          fontSize: '16px',
+          fontSize: '14px',
           fontWeight: 500,
           color: '#ffffff',
           fontFamily: "'Inter', sans-serif",

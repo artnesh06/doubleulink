@@ -33,8 +33,8 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
         {['links', 'shop'].map(tab => (
           <button key={tab} onClick={() => onSwitch(tab)} style={{
             position: 'relative', zIndex: 1,
-            padding: '13px 28px', borderRadius: pillRadius,
-            fontSize: '15px', fontWeight: 600,
+            padding: '11px 24px', borderRadius: pillRadius,
+            fontSize: '13px', fontWeight: 600,
             cursor: 'pointer', border: 'none',
             fontFamily: "'Inter', sans-serif",
             background: 'transparent',

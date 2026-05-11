@@ -20,21 +20,24 @@ export default function OnboardingPage() {
   }
 
   function handleFinish() {
-    // Save to localStorage so the profile page picks it up
+    // Save complete state to localStorage
     try {
-      const existing = localStorage.getItem(STORAGE_KEY)
-      const state = existing ? JSON.parse(existing) : {}
-      state.profile = {
-        ...(state.profile || {}),
-        name: name || 'User',
+      localStorage.removeItem(STORAGE_KEY)
+      const fullState = {
+        profile: {
+          name: name || 'User',
+          bio: '',
+          instagram: '',
+          pinterest: '',
+          twitter: '',
+          avatarUrl: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + encodeURIComponent(name || 'user'),
+        },
+        links: (linkLabel.trim() && linkUrl.trim())
+          ? [{ id: Date.now(), label: linkLabel, url: linkUrl, icon: null }]
+          : [{ id: Date.now(), label: 'My Link', url: 'https://', icon: null }],
+        onboarded: true,
       }
-      if (linkLabel.trim() && linkUrl.trim()) {
-        state.links = [
-          { id: Date.now(), label: linkLabel, url: linkUrl, icon: null },
-        ]
-      }
-      state.onboarded = true
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState))
     } catch (e) {
       console.warn('Failed to save onboarding:', e)
     }
@@ -45,10 +48,7 @@ export default function OnboardingPage() {
 
   function handleSkip() {
     try {
-      const existing = localStorage.getItem(STORAGE_KEY)
-      const state = existing ? JSON.parse(existing) : {}
-      state.onboarded = true
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ onboarded: true }))
     } catch (e) {
       console.warn('Failed to save onboarding:', e)
     }

@@ -241,7 +241,7 @@ export default function LinktreePage({ isOwner = false }) {
   const effectiveCardBgStyle = getCardBg(state.cardBg, theme)
   const effectiveFont      = state.textSettings.font || 'Inter'
   const effectiveTextColor = state.textSettings.color || theme.textColor
-  const effectiveTitleSize = state.textSettings.titleSize === 'large' ? '30px' : '24px'
+  const effectiveTitleSize = state.textSettings.titleSize === 'large' ? '26px' : '20px'
 
   // Extra CSS for wallpaper styles
   let wallpaperExtraStyle = ''
@@ -373,7 +373,6 @@ export default function LinktreePage({ isOwner = false }) {
         body {
           background: ${effectiveBg};
           ${wallpaperExtraStyle}
-          filter: ${wallpaperEffectFilter || 'none'};
           transition: background 0.4s ease;
           margin: 0;
           font-family: '${effectiveFont}', sans-serif;
@@ -510,6 +509,14 @@ export default function LinktreePage({ isOwner = false }) {
       <div className={`lt-body${editMode ? ' edit-open' : ''}`}>
         {/* Page background animation */}
         {renderPageAnimation()}
+        {/* Wallpaper effect overlay — blurs only the background, not content */}
+        {wallpaperEffectFilter && (
+          <div style={{
+            position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+            backdropFilter: wallpaperEffectFilter,
+            WebkitBackdropFilter: wallpaperEffectFilter,
+          }} />
+        )}
         {/* Tint overlay */}
         {tintOpacity > 0 && (
           <div style={{
@@ -706,7 +713,7 @@ export default function LinktreePage({ isOwner = false }) {
               onChange={v => updateProfile('bio', v)}
               multiline
               style={{
-                fontSize: '17px',
+                fontSize: '14px',
                 fontWeight: 400,
                 color: effectiveTextColor,
                 textAlign: 'center',
@@ -749,7 +756,7 @@ export default function LinktreePage({ isOwner = false }) {
                       alignItems: 'center',
                       ...btnStyle,
                       padding: '0 16px',
-                      height: '64px',
+                      height: '56px',
                       position: 'relative',
                       cursor: editMode ? 'default' : 'pointer',
                       textDecoration: 'none',
@@ -761,7 +768,7 @@ export default function LinktreePage({ isOwner = false }) {
                   >
                     {iconCfg && (
                       <div style={{
-                        width: '44px', height: '44px', minWidth: '44px',
+                        width: '38px', height: '38px', minWidth: '38px',
                         borderRadius: r,
                         background: iconCfg.bg,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -781,7 +788,7 @@ export default function LinktreePage({ isOwner = false }) {
                         value={link.label}
                         onChange={v => updateLink(link.id, 'label', v)}
                         style={{
-                          fontSize: '16px',
+                          fontSize: '14px',
                           fontWeight: 500,
                           color: state.buttonSettings.style === 'outline' ? effectiveTextColor : btnTextColor,
                           fontFamily: `'${effectiveFont}', sans-serif`,
