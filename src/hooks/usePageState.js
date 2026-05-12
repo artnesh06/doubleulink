@@ -33,7 +33,13 @@ const defaultState = {
   textSettings: { font: 'Inter', color: '#ffffff', titleSize: 'small' },
   buttonSettings: { style: 'solid', roundness: 'full', shadow: 'none', color: '#171717', textColor: '#ffffff' },
   customColors: { background: '#1a1a1a', buttons: '#171717', buttonText: '#ffffff', pageText: '#ffffff', titleText: '#ffffff' },
-  spacing: { cardPadding: 18, linkGap: 8, sectionGap: 8, avatarSize: 100, hoverZoom: 1 },
+  spacing: { 
+    cardPadding: 40, 
+    linkGap: 12, 
+    avatarSize: 100, 
+    hoverZoom: 1,
+    sectionGap: 14
+  },
   cornerRadius: 'full',
 }
 
@@ -72,7 +78,11 @@ export function usePageState() {
 
   function reset() {
     setState(defaultState)
-    try { localStorage.removeItem(STORAGE_KEY) } catch (e) { console.warn('Failed to reset:', e) }
+    try { 
+      localStorage.removeItem(STORAGE_KEY)
+    } catch (e) { 
+      console.warn('Failed to reset:', e) 
+    }
   }
 
   function updateProfile(field, value) {

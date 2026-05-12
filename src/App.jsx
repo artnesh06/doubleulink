@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import OnboardingPage from './pages/OnboardingPage'
 import AdminPage from './pages/AdminPage'
 import ProfilePage from './pages/ProfilePage'
+import SamplePage from './pages/SamplePage'
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/login"      element={<LoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/admin"      element={<AdminPage />} />
+        <Route path="/sample"     element={<SamplePage />} />
         {/* Public profile — must be last */}
         <Route path="/:username"  element={<ProfilePage />} />
       </Routes>
