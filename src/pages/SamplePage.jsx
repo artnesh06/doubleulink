@@ -717,8 +717,9 @@ export default function SamplePage() {
             height: 24px !important;
           }
           
-          .social-icons-override a {
-            margin: 0 6px !important;
+          /* Reduce gap between icons on mobile - tighter spacing */
+          .social-icons-override {
+            gap: 10px !important;
           }
           
           /* Tab buttons */
