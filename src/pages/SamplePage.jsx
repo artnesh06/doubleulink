@@ -701,8 +701,8 @@ export default function SamplePage() {
           }
           
           /* Link cards BIGGER on mobile */
-          .sample-card [style*="height: 64px"] {
-            height: 58px !important;
+          .sample-card [style*="height: 72px"] {
+            height: 64px !important;
             font-size: 16px !important;
           }
           
@@ -1136,7 +1136,7 @@ export default function SamplePage() {
                   alignItems: 'center',
                   gap: '0',
                   padding: '0 16px',
-                  height: '64px',
+                  height: '72px',
                   cursor: editMode ? 'move' : 'pointer',
                   textDecoration: 'none',
                   color: state.buttonSettings.textColor || theme.textColor,
