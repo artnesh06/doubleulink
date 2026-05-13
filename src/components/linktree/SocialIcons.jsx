@@ -146,8 +146,8 @@ function SocialIcon({ platformKey, platform, iconColor }) {
   
   return (
     <div style={{
-      width: '28px',
-      height: '28px',
+      width: '32px',
+      height: '32px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

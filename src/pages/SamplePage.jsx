@@ -706,13 +706,19 @@ export default function SamplePage() {
             font-size: 16px !important;
           }
           
-          /* Social icons BIGGER on mobile - target the container */
-          .social-icons-override {
-            transform: scale(1.15) !important;
+          /* Social icons proper size on mobile */
+          .social-icons-override a > div {
+            width: 36px !important;
+            height: 36px !important;
+          }
+          
+          .social-icons-override a > div svg {
+            width: 24px !important;
+            height: 24px !important;
           }
           
           .social-icons-override a {
-            margin: 0 4px !important;
+            margin: 0 6px !important;
           }
           
           /* Tab buttons */
