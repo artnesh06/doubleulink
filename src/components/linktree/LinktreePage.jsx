@@ -5,6 +5,7 @@ import { usePageState } from '../../hooks/usePageState'
 import { getTheme } from '../../data/themes'
 import TabNavigator from './TabNavigator'
 import ShopGrid from './ShopGrid'
+import CollectionGrid from './CollectionGrid'
 import SocialIcons from './SocialIcons'
 import { Aurora, Particles, FlickeringGrid, Waves, Silk, RetroGrid, Lightning, Orb, PixelSnow, Threads, Radar } from '../backgrounds'
 
@@ -338,7 +339,10 @@ export default function LinktreePage({ isOwner = false }) {
 
   function handleSwitch(tab) {
     if (tab === activeTab) return
-    setSlideDir(tab === 'shop' ? 'right' : 'left')
+    const tabs = ['links', 'shop', 'collection']
+    const currentIndex = tabs.indexOf(activeTab)
+    const newIndex = tabs.indexOf(tab)
+    setSlideDir(newIndex > currentIndex ? 'right' : 'left')
     setActiveTab(tab)
   }
 
@@ -752,7 +756,7 @@ export default function LinktreePage({ isOwner = false }) {
           />
 
           {/* ── Links tab ── */}
-          {activeTab === 'links' ? (
+          {activeTab === 'links' && (
             <div
               key={slideDir + '-links'}
               className={slideDir === null ? '' : slideDir === 'right' ? 'slide-in-right' : 'slide-in-left'}
@@ -850,7 +854,10 @@ export default function LinktreePage({ isOwner = false }) {
                 </button>
               )}
             </div>
-          ) : (
+          )}
+
+          {/* ── Shop tab ── */}
+          {activeTab === 'shop' && (
             <div style={{ marginBottom: '32px' }}>
               <ShopGrid
                 items={state.shopItems}
@@ -858,6 +865,25 @@ export default function LinktreePage({ isOwner = false }) {
                 theme={theme}
                 cornerRadius={r}
                 hoverZoom={hz}
+              />
+            </div>
+          )}
+
+          {/* ── Collection tab ── */}
+          {activeTab === 'collection' && (
+            <div
+              key={slideDir + '-collection'}
+              className={slideDir === null ? '' : slideDir === 'right' ? 'slide-in-right' : 'slide-in-left'}
+              style={{ marginBottom: '32px' }}
+            >
+              <CollectionGrid
+                theme={theme}
+                cornerRadius={r}
+                hoverZoom={hz}
+                cardBgStyle={effectiveCardBgStyle}
+                textColor={effectiveTextColor}
+                font={effectiveFont}
+                editMode={editMode}
               />
             </div>
           )}

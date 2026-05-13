@@ -15,32 +15,56 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
     : cornerRadius === '16px' ? '16px'
     : '999px' // full
 
+  const tabs = ['links', 'shop', 'collection']
+  const activeIndex = tabs.indexOf(activeTab)
+  
+  // Calculate pill position - each tab is 33.333% width
+  const pillTransform = `translateX(${activeIndex * 100}%)`
+
   return (
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
       <div style={{
-        position: 'relative', display: 'flex',
-        background: tabBg, borderRadius: outerRadius,
-        padding: '3px', width: 'fit-content',
+        position: 'relative', 
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '0',
+        background: tabBg, 
+        borderRadius: outerRadius,
+        padding: '3px', 
+        width: '100%',
+        maxWidth: '500px',
       }}>
         {/* Sliding pill */}
         <div style={{
-          position: 'absolute', top: '3px', left: '3px',
-          height: 'calc(100% - 6px)', width: 'calc(50% - 3px)',
-          background: tabActive, borderRadius: pillRadius,
+          position: 'absolute', 
+          top: '3px', 
+          left: '3px',
+          right: '3px',
+          height: 'calc(100% - 6px)', 
+          width: 'calc((100% - 6px) / 3)',
+          background: tabActive, 
+          borderRadius: pillRadius,
           transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          transform: activeTab === 'shop' ? 'translateX(100%)' : 'translateX(0%)',
+          transform: pillTransform,
         }} />
-        {['links', 'shop'].map(tab => (
+        {tabs.map(tab => (
           <button key={tab} onClick={() => onSwitch(tab)} className="lt-tab-btn" style={{
-            position: 'relative', zIndex: 1,
-            padding: '13px 28px', borderRadius: pillRadius,
-            fontSize: '15px', fontWeight: 600,
-            cursor: 'pointer', border: 'none',
+            position: 'relative', 
+            zIndex: 1,
+            padding: '13px 8px', 
+            borderRadius: pillRadius,
+            fontSize: '13px', 
+            fontWeight: 600,
+            cursor: 'pointer', 
+            border: 'none',
             fontFamily: "'Inter', sans-serif",
             background: 'transparent',
             color: activeTab === tab ? tabActiveText : tabInactiveText,
             transition: 'color 0.3s ease',
             textTransform: 'capitalize',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>

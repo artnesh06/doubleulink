@@ -1,11 +1,29 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { getTheme } from '../data/themes'
 import { Aurora, Particles, FlickeringGrid, Waves, Silk, RetroGrid, Lightning, Orb, PixelSnow, Threads, Radar } from '../components/backgrounds'
 import TabNavigator from '../components/linktree/TabNavigator'
 import SocialIcons from '../components/linktree/SocialIcons'
+import CollectionGrid from '../components/linktree/CollectionGrid'
 import EditPopup from '../components/editor/EditPopup'
 import LeftSettingsPanel from '../components/editor/LeftSettingsPanel'
 import { defaultLinks, PFP_URL } from '../data/data'
+import {
+  ShimmerEffect,
+  ShinyEffect,
+  RainbowEffect,
+  RippleEffect,
+  PulsatingEffect,
+  GlareEffect,
+  ElectricBorderEffect,
+  StarBorderEffect,
+  BorderGlowEffect,
+  SpotlightEffect,
+  InteractiveHoverEffect,
+  MagnetEffect,
+  PixelEffect,
+  ClickSparkEffect,
+  TargetCursorEffect,
+} from '../components/animations/ButtonAnimations'
 
 // Default state for SamplePage (no localStorage)
 const defaultState = {
@@ -15,14 +33,43 @@ const defaultState = {
     instagram: 'https://www.instagram.com/artnesh_/',
     pinterest: 'https://id.pinterest.com/artnesh_/_created/',
     twitter: 'https://x.com/artnesh',
+    // Additional social media (empty by default)
+    facebook: '',
+    youtube: '',
+    tiktok: '',
+    linkedin: '',
+    github: '',
+    discord: '',
+    telegram: '',
+    whatsapp: '',
+    spotify: '',
+    twitch: '',
+    behance: '',
+    dribbble: '',
+    medium: '',
+    reddit: '',
+    snapchat: '',
+    threads: '',
+    substack: '',
+    patreon: '',
+    etsy: '',
+    email: '',
+    phone: '',
+    website: '',
     avatarUrl: PFP_URL,
+    avatarFlipH: false,
+    avatarFlipV: false,
+    avatarRotate: 0,
+    avatarScale: 1,
     nameFont: null, // null = use global
     nameColor: null, // null = use global
     bioFont: null,
     bioColor: null,
   },
+  hideSocialIcons: false, // Toggle to hide/show social icons
   links: defaultLinks,
   themeId: 'chrome',
+  themeMode: 'system', // 'system', 'bright', 'night'
   wallpaper: { style: 'solid', color: '#1a1a1a', animation: { id: 'none', params: {} } },
   cardBg: { style: 'solid', color: '#242424', animation: { id: 'none', params: {} } },
   textSettings: { font: 'Inter', color: '#ffffff', titleSize: 'small' },
@@ -38,6 +85,31 @@ const defaultState = {
     tabsToLinks: 30
   },
   cornerRadius: 'full',
+}
+
+// Theme presets
+const THEME_PRESETS = {
+  system: {
+    wallpaper: '#1a1a1a',
+    cardBg: '#242424',
+    textColor: '#ffffff',
+    linkBg: '#171717',
+    linkText: '#ffffff',
+  },
+  bright: {
+    wallpaper: '#f5f5f5',
+    cardBg: '#ffffff',
+    textColor: '#000000',
+    linkBg: '#e8e8e8',
+    linkText: '#000000',
+  },
+  night: {
+    wallpaper: '#000000',
+    cardBg: '#0a0a0a',
+    textColor: '#ffffff',
+    linkBg: '#1a1a1a',
+    linkText: '#ffffff',
+  },
 }
 
 // ── Icon map ─────────────────────────────────────────────────
@@ -144,6 +216,115 @@ export default function SamplePage() {
   const [editMode, setEditMode] = useState(false)
   const [activeTab, setActiveTab] = useState('links')
   const [popup, setPopup] = useState(null)
+  const [centerCardHeight, setCenterCardHeight] = useState(0)
+  const centerCardRef = useRef(null)
+  
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
+  
+  // History for undo/redo
+  const [history, setHistory] = useState([defaultState])
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const isUndoRedoAction = useRef(false)
+  const prevStateRef = useRef(defaultState)
+
+  // Save to history when state changes (but not during undo/redo)
+  useEffect(() => {
+    // Skip if this is an undo/redo action
+    if (isUndoRedoAction.current) {
+      isUndoRedoAction.current = false
+      prevStateRef.current = state
+      return
+    }
+
+    // Skip if state hasn't actually changed
+    if (JSON.stringify(state) === JSON.stringify(prevStateRef.current)) {
+      return
+    }
+
+    prevStateRef.current = state
+
+    // Add new state to history
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1)
+      newHistory.push(state)
+      
+      // Limit history to 50 items
+      if (newHistory.length > 50) {
+        newHistory.shift()
+        return newHistory
+      }
+      
+      return newHistory
+    })
+    
+    setHistoryIndex(prev => Math.min(prev + 1, 49))
+  }, [state])
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    function handleKeyDown(e) {
+      // Ctrl+Z or Cmd+Z for undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+      // Ctrl+Shift+Z or Cmd+Shift+Z for redo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+        e.preventDefault()
+        handleRedo()
+      }
+      // Ctrl+Y or Cmd+Y for redo (alternative)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault()
+        handleRedo()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [historyIndex, history])
+
+  function handleUndo() {
+    if (historyIndex > 0) {
+      isUndoRedoAction.current = true
+      const newIndex = historyIndex - 1
+      setHistoryIndex(newIndex)
+      setState(history[newIndex])
+    }
+  }
+
+  function handleRedo() {
+    if (historyIndex < history.length - 1) {
+      isUndoRedoAction.current = true
+      const newIndex = historyIndex + 1
+      setHistoryIndex(newIndex)
+      setState(history[newIndex])
+    }
+  }
+
+  // Measure center card height
+  useEffect(() => {
+    if (centerCardRef.current) {
+      const updateHeight = () => {
+        setCenterCardHeight(centerCardRef.current.offsetHeight)
+      }
+      updateHeight()
+      
+      // Update on window resize
+      window.addEventListener('resize', updateHeight)
+      
+      // Use ResizeObserver for content changes
+      const resizeObserver = new ResizeObserver(updateHeight)
+      resizeObserver.observe(centerCardRef.current)
+      
+      return () => {
+        window.removeEventListener('resize', updateHeight)
+        resizeObserver.disconnect()
+      }
+    }
+  }, [state, activeTab, editMode]) // Re-measure when content changes
 
   function updateProfile(field, value) {
     setState(prev => ({ ...prev, profile: { ...prev.profile, [field]: value } }))
@@ -159,6 +340,55 @@ export default function SamplePage() {
 
   function addLink(newLink) {
     setState(prev => ({ ...prev, links: [...prev.links, newLink] }))
+  }
+
+  function reorderLinks(newLinks) {
+    setState(prev => ({ ...prev, links: newLinks }))
+  }
+
+  // Drag and drop handlers
+  function handleDragStart(e, index) {
+    if (!editMode) return
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  function handleDragOver(e, index) {
+    if (!editMode) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (index !== dragOverIndex) {
+      setDragOverIndex(index)
+    }
+  }
+
+  function handleDragLeave() {
+    setDragOverIndex(null)
+  }
+
+  function handleDrop(e, dropIndex) {
+    if (!editMode) return
+    e.preventDefault()
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+
+    // Reorder the links
+    const newLinks = [...state.links]
+    const [draggedItem] = newLinks.splice(draggedIndex, 1)
+    newLinks.splice(dropIndex, 0, draggedItem)
+    
+    reorderLinks(newLinks)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function handleDragEnd() {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
   }
 
   function setWallpaper(updates) {
@@ -181,9 +411,24 @@ export default function SamplePage() {
     setState(prev => ({ ...prev, cornerRadius: value }))
   }
 
+  function setThemeMode(mode) {
+    const preset = THEME_PRESETS[mode]
+    setState(prev => ({
+      ...prev,
+      themeMode: mode,
+      wallpaper: { ...prev.wallpaper, color: preset.wallpaper },
+      cardBg: { ...prev.cardBg, color: preset.cardBg },
+      textSettings: { ...prev.textSettings, color: preset.textColor },
+      buttonSettings: { ...prev.buttonSettings, color: preset.linkBg, textColor: preset.linkText },
+    }))
+  }
+
   function handleReset() {
     setState(defaultState)
     setPopup(null)
+    // Reset history
+    setHistory([defaultState])
+    setHistoryIndex(0)
   }
 
   function handleGlobalUpdate(key, value) {
@@ -203,6 +448,12 @@ export default function SamplePage() {
       case 'cornerRadius':
         setCornerRadius(value)
         break
+      case 'themeMode':
+        setThemeMode(value)
+        break
+      case 'hideSocialIcons':
+        setState(prev => ({ ...prev, hideSocialIcons: value }))
+        break
     }
   }
 
@@ -211,6 +462,30 @@ export default function SamplePage() {
   const r = radiusMap[state.cornerRadius] || '16px'
   const avatarRadius = state.cornerRadius === 'full' ? '50%' : r
   const cardRadius = state.cornerRadius === 'full' ? '32px' : r
+
+  // Helper function to wrap link with animation
+  function wrapWithAnimation(content, animation, linkStyle, settings = {}) {
+    const animationProps = { style: linkStyle, settings }
+    
+    switch (animation) {
+      case 'shimmer': return <ShimmerEffect {...animationProps}>{content}</ShimmerEffect>
+      case 'shiny': return <ShinyEffect {...animationProps}>{content}</ShinyEffect>
+      case 'rainbow': return <RainbowEffect {...animationProps}>{content}</RainbowEffect>
+      case 'ripple': return <RippleEffect {...animationProps}>{content}</RippleEffect>
+      case 'pulsating': return <PulsatingEffect {...animationProps}>{content}</PulsatingEffect>
+      case 'glare': return <GlareEffect {...animationProps}>{content}</GlareEffect>
+      case 'electric': return <ElectricBorderEffect {...animationProps}>{content}</ElectricBorderEffect>
+      case 'starborder': return <StarBorderEffect {...animationProps}>{content}</StarBorderEffect>
+      case 'borderglow': return <BorderGlowEffect {...animationProps}>{content}</BorderGlowEffect>
+      case 'spotlight': return <SpotlightEffect {...animationProps}>{content}</SpotlightEffect>
+      case 'interactive': return <InteractiveHoverEffect {...animationProps}>{content}</InteractiveHoverEffect>
+      case 'magnet': return <MagnetEffect {...animationProps}>{content}</MagnetEffect>
+      case 'pixel': return <PixelEffect {...animationProps}>{content}</PixelEffect>
+      case 'clickspark': return <ClickSparkEffect {...animationProps}>{content}</ClickSparkEffect>
+      case 'targetcursor': return <TargetCursorEffect {...animationProps}>{content}</TargetCursorEffect>
+      default: return <div style={linkStyle}>{content}</div>
+    }
+  }
 
   const effectiveBg = getWallpaperBg(state.wallpaper, theme)
   const effectiveCardBgStyle = getCardBg(state.cardBg, theme)
@@ -353,6 +628,10 @@ export default function SamplePage() {
         }
 
         .edit-icon {
+          position: absolute;
+          top: 50%;
+          right: -36px;
+          transform: translateY(-50%);
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -362,14 +641,13 @@ export default function SamplePage() {
           border: 1.5px solid rgba(0, 255, 136, 0.4);
           border-radius: 50%;
           cursor: pointer;
-          opacity: ${editMode ? '0.8' : '0'};
+          opacity: ${editMode ? '1' : '0'};
           transition: all 0.2s;
           pointer-events: ${editMode ? 'auto' : 'none'};
-          margin-left: 8px;
         }
 
         .edit-icon:hover {
-          ${editMode ? 'opacity: 1; background: rgba(0, 255, 136, 0.25); border-color: rgba(0, 255, 136, 0.6);' : ''}
+          ${editMode ? 'background: rgba(0, 255, 136, 0.25); border-color: rgba(0, 255, 136, 0.6); transform: translateY(-50%) scale(1.1);' : ''}
         }
 
         @keyframes ping {
@@ -458,14 +736,19 @@ export default function SamplePage() {
               state={state} 
               onUpdate={handleGlobalUpdate}
               onReset={handleReset}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              canUndo={historyIndex > 0}
+              canRedo={historyIndex < history.length - 1}
               theme={theme}
               cardBgStyle={effectiveCardBgStyle}
               cardRadius={cardRadius}
+              maxHeight={centerCardHeight}
             />
           </div>
         )}
 
-        <div className="sample-card" onClick={(e) => {
+        <div ref={centerCardRef} className="sample-card" onClick={(e) => {
           // Don't open popup for card background - settings are in LeftPanel
           e.stopPropagation()
         }}>
@@ -581,6 +864,12 @@ export default function SamplePage() {
                       height: '100%', 
                       objectFit: 'cover',
                       display: 'block',
+                      transform: `
+                        scaleX(${state.profile.avatarFlipH ? -1 : 1}) 
+                        scaleY(${state.profile.avatarFlipV ? -1 : 1}) 
+                        rotate(${state.profile.avatarRotate || 0}deg) 
+                        scale(${state.profile.avatarScale || 1})
+                      `,
                     }}
                   />
                 </div>
@@ -608,8 +897,78 @@ export default function SamplePage() {
                         e.stopPropagation()
                         handleElementClick(e, 'name', state.profile)
                       }}
+                      style={{ border: 'none' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ff88" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '0', maxWidth: '500px', width: '100%' }}>
+                <div
+                  className={editMode ? 'editable-element' : ''}
+                  onClick={(e) => handleElementClick(e, 'bio', state.profile)}
+                  style={{
+                    fontSize: '17px',
+                    color: state.profile.bioColor || effectiveTextColor,
+                    fontFamily: state.profile.bioFont ? `'${state.profile.bioFont}', sans-serif` : `'${effectiveFont}', sans-serif`,
+                    textAlign: 'center',
+                    cursor: editMode ? 'pointer' : 'default',
+                    position: 'relative',
+                    flex: 1,
+                    lineHeight: '1.5',
+                    margin: 0,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                  }}
+                >
+                  {state.profile.bio}
+                  {editMode && (
+                    <button 
+                      className="edit-icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleElementClick(e, 'bio', state.profile)
+                      }}
+                      style={{ border: 'none', top: '0', transform: 'translateY(0)' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ff88" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Social Icons */}
+            {!state.hideSocialIcons && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: `${state.spacing.socialToTabs || 18}px` }}>
+                <div
+                  className={editMode ? 'editable-element social-icons-override' : 'social-icons-override'}
+                  onClick={(e) => handleElementClick(e, 'social', state.profile)}
+                  style={{ cursor: editMode ? 'pointer' : 'default', position: 'relative' }}
+                >
+                  <SocialIcons
+                    profile={state.profile}
+                    theme={{ ...theme, textColor: effectiveTextColor }}
+                    hoverZoom={hz}
+                  />
+                  {editMode && (
+                    <button 
+                      className="edit-icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleElementClick(e, 'social', state.profile)
+                      }}
                       style={{ 
-                        border: 'none', 
+                        border: 'none',
                         position: 'absolute',
                         right: '-36px',
                         top: '50%',
@@ -624,85 +983,7 @@ export default function SamplePage() {
                   )}
                 </div>
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '0', maxWidth: '500px' }}>
-                <div
-                  className={editMode ? 'editable-element' : ''}
-                  onClick={(e) => handleElementClick(e, 'bio', state.profile)}
-                  style={{
-                    fontSize: '17px',
-                    color: state.profile.bioColor || effectiveTextColor,
-                    fontFamily: state.profile.bioFont ? `'${state.profile.bioFont}', sans-serif` : `'${effectiveFont}', sans-serif`,
-                    textAlign: 'center',
-                    cursor: editMode ? 'pointer' : 'default',
-                    position: 'relative',
-                    flex: 1,
-                    lineHeight: '1.5',
-                    margin: 0,
-                  }}
-                >
-                  {state.profile.bio}
-                  {editMode && (
-                    <button 
-                      className="edit-icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleElementClick(e, 'bio', state.profile)
-                      }}
-                      style={{ 
-                        border: 'none', 
-                        position: 'absolute',
-                        right: '-36px',
-                        top: '0',
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00ff88" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Social Icons */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: `${state.spacing.socialToTabs || 18}px` }}>
-              <div
-                className={editMode ? 'editable-element social-icons-override' : 'social-icons-override'}
-                onClick={(e) => handleElementClick(e, 'social', state.profile)}
-                style={{ cursor: editMode ? 'pointer' : 'default', position: 'relative' }}
-              >
-                <SocialIcons
-                  instagram={state.profile.instagram}
-                  pinterest={state.profile.pinterest}
-                  twitter={state.profile.twitter}
-                  theme={{ ...theme, textColor: effectiveTextColor }}
-                  hoverZoom={hz}
-                />
-                {editMode && (
-                  <button 
-                    className="edit-icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleElementClick(e, 'social', state.profile)
-                    }}
-                    style={{ 
-                      border: 'none',
-                      position: 'absolute',
-                      right: '-36px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00ff88" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
+            )}
 
             {/* Tabs */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: `${state.spacing.tabsToLinks || 24}px` }}>
@@ -750,38 +1031,35 @@ export default function SamplePage() {
               </div>
             </div>
 
-            {/* Links */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: `${state.spacing.linkGap || 12}px`, paddingBottom: '40px' }}>
-              {state.links.map((link) => {
-                const iconData = ICON_MAP[link.icon]
-                return (
-                  <div
-                    key={link.id}
-                    className={editMode ? 'editable-element' : ''}
-                    onClick={(e) => handleElementClick(e, 'link', { ...link, onDelete: removeLink })}
-                    style={{
-                      ...btnStyle,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0',
-                      padding: '0 16px',
-                      height: '64px',
-                      cursor: editMode ? 'pointer' : 'default',
-                      textDecoration: 'none',
-                      color: state.buttonSettings.textColor || theme.textColor,
-                      transition: 'transform 0.2s ease',
-                      position: 'relative',
-                    }}
-                  >
-                    {iconData && (
+            {/* Tab Content */}
+            {activeTab === 'links' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: `${state.spacing.linkGap || 12}px`, paddingBottom: '40px' }}>
+                {state.links.map((link, index) => {
+                const hasImage = link.imageUrl && link.imageUrl.trim() !== ''
+                
+                // Corner radius - use numeric value directly
+                const linkRadius = link.cornerRadius !== undefined ? `${link.cornerRadius}px` : '14px'
+                const linkAnimation = link.animation || 'none'
+                
+                const linkContent = (
+                  <>
+                    {hasImage && (
                       <div style={{
                         width: '44px', height: '44px', minWidth: '44px',
-                        borderRadius: r,
-                        background: iconData.bg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: linkRadius,
+                        overflow: 'hidden',
                         flexShrink: 0,
+                        border: '1px solid rgba(255,255,255,0.1)',
                       }}>
-                        {iconData.svg}
+                        <img
+                          src={link.imageUrl}
+                          alt={link.label}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
                       </div>
                     )}
                     <span style={{ 
@@ -789,7 +1067,8 @@ export default function SamplePage() {
                       fontWeight: 500, 
                       flex: 1,
                       textAlign: 'center',
-                      paddingRight: iconData ? '44px' : '0',
+                      paddingRight: hasImage ? '44px' : '0',
+                      paddingLeft: hasImage ? '0' : '0',
                     }}>
                       {link.label}
                     </span>
@@ -798,7 +1077,8 @@ export default function SamplePage() {
                         className="edit-icon"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleElementClick(e, 'link', link)
+                          e.preventDefault()
+                          handleElementClick(e, 'link', { ...link, onDelete: removeLink })
                         }}
                         style={{ 
                           border: 'none', 
@@ -812,6 +1092,56 @@ export default function SamplePage() {
                         </svg>
                       </button>
                     )}
+                  </>
+                )
+                
+                const linkStyle = {
+                  ...btnStyle,
+                  borderRadius: linkRadius,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0',
+                  padding: '0 16px',
+                  height: '64px',
+                  cursor: editMode ? 'move' : 'pointer',
+                  textDecoration: 'none',
+                  color: state.buttonSettings.textColor || theme.textColor,
+                  transition: 'transform 0.2s ease',
+                  position: 'relative',
+                  opacity: draggedIndex === index ? 0.5 : 1,
+                }
+                
+                return (
+                  <div
+                    key={link.id}
+                    draggable={editMode}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      position: 'relative',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {/* Drop indicator line */}
+                    {dragOverIndex === index && draggedIndex !== null && draggedIndex !== index && (
+                      <div style={{
+                        position: 'absolute',
+                        top: draggedIndex < index ? '100%' : '-2px',
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        background: '#00ff88',
+                        borderRadius: '1px',
+                        boxShadow: '0 0 8px rgba(0, 255, 136, 0.6)',
+                        zIndex: 20,
+                      }} />
+                    )}
+                    
+                    {/* Link button with animation wrapper */}
+                    {wrapWithAnimation(linkContent, linkAnimation, linkStyle, link.animationSettings)}
                   </div>
                 )
               })}
@@ -860,7 +1190,33 @@ export default function SamplePage() {
                   Add Link
                 </button>
               )}
-            </div>
+              </div>
+            )}
+
+            {/* Collections Tab */}
+            {activeTab === 'collections' && (
+              <CollectionGrid
+                theme={theme}
+                cornerRadius={r}
+                hoverZoom={hz}
+                cardBgStyle={effectiveCardBgStyle}
+                textColor={effectiveTextColor}
+                font={effectiveFont}
+                editMode={editMode}
+              />
+            )}
+
+            {/* Shop Tab */}
+            {activeTab === 'shop' && (
+              <div style={{ 
+                padding: '60px 20px 40px',
+                textAlign: 'center',
+                color: effectiveTextColor,
+                opacity: 0.5,
+              }}>
+                <p style={{ fontFamily: `'${effectiveFont}', sans-serif` }}>Shop coming soon...</p>
+              </div>
+            )}
 
             {/* Footer */}
             <div style={{
@@ -910,7 +1266,7 @@ export default function SamplePage() {
             <EditPopup
               key={`${popup.type}-${popup.data?.id || 'single'}`}
               type={popup.type}
-              data={popup.data}
+              data={{ ...popup.data, themeMode: state.themeMode }}
               position={popup.position}
               onClose={() => setPopup(null)}
               onUpdate={(updates) => {
@@ -918,7 +1274,11 @@ export default function SamplePage() {
                 console.log('Popup type:', popup.type, 'Updates:', updates)
                 switch (popup.type) {
                   case 'avatar':
-                    if (updates.avatarUrl) updateProfile('avatarUrl', updates.avatarUrl)
+                    if (updates.avatarUrl !== undefined) updateProfile('avatarUrl', updates.avatarUrl)
+                    if (updates.avatarFlipH !== undefined) updateProfile('avatarFlipH', updates.avatarFlipH)
+                    if (updates.avatarFlipV !== undefined) updateProfile('avatarFlipV', updates.avatarFlipV)
+                    if (updates.avatarRotate !== undefined) updateProfile('avatarRotate', updates.avatarRotate)
+                    if (updates.avatarScale !== undefined) updateProfile('avatarScale', updates.avatarScale)
                     break
                   case 'name':
                     if (updates.name !== undefined) {
@@ -937,14 +1297,21 @@ export default function SamplePage() {
                     if (updates.bioColor !== undefined) updateProfile('bioColor', updates.bioColor)
                     break
                   case 'social':
-                    if (updates.instagram !== undefined) updateProfile('instagram', updates.instagram)
-                    if (updates.twitter !== undefined) updateProfile('twitter', updates.twitter)
-                    if (updates.pinterest !== undefined) updateProfile('pinterest', updates.pinterest)
+                    // Update all social media fields dynamically
+                    Object.keys(updates).forEach(key => {
+                      if (updates[key] !== undefined) {
+                        updateProfile(key, updates[key])
+                      }
+                    })
                     break
                   case 'link':
                     if (updates.label !== undefined) updateLink(popup.data.id, 'label', updates.label)
                     if (updates.url !== undefined) updateLink(popup.data.id, 'url', updates.url)
                     if (updates.icon !== undefined) updateLink(popup.data.id, 'icon', updates.icon)
+                    if (updates.imageUrl !== undefined) updateLink(popup.data.id, 'imageUrl', updates.imageUrl)
+                    if (updates.cornerRadius !== undefined) updateLink(popup.data.id, 'cornerRadius', updates.cornerRadius)
+                    if (updates.animation !== undefined) updateLink(popup.data.id, 'animation', updates.animation)
+                    if (updates.animationSettings !== undefined) updateLink(popup.data.id, 'animationSettings', updates.animationSettings)
                     break
                   case 'wallpaper':
                     setWallpaper(updates)
@@ -961,6 +1328,7 @@ export default function SamplePage() {
               theme={theme}
               cardBgStyle={effectiveCardBgStyle}
               cardRadius={cardRadius}
+              maxHeight={centerCardHeight}
             />
           </div>
         )}

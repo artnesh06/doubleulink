@@ -32,7 +32,7 @@ const iconConfig = {
   pinterest: { Icon: PinterestIcon, bg: '#E60023', color: '#fff' },
 }
 
-export default function LinkCard({ label, url, icon }) {
+export default function LinkCard({ label, url, icon, imageUrl }) {
   const cfg = iconConfig[icon]
 
   return (
@@ -53,8 +53,30 @@ export default function LinkCard({ label, url, icon }) {
         flexShrink: 0,
       }}
     >
-      {/* Icon thumbnail — fixed 40x40 */}
-      {cfg && (
+      {/* Icon/Image thumbnail — fixed 40x40 */}
+      {imageUrl ? (
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            minWidth: '40px',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            flexShrink: 0,
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <img
+            src={imageUrl}
+            alt={label}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
+      ) : cfg ? (
         <div
           style={{
             width: '40px',
@@ -71,7 +93,7 @@ export default function LinkCard({ label, url, icon }) {
         >
           <cfg.Icon />
         </div>
-      )}
+      ) : null}
 
       {/* Label — centered in remaining space */}
       <span
@@ -82,7 +104,7 @@ export default function LinkCard({ label, url, icon }) {
           fontWeight: 500,
           color: '#ffffff',
           fontFamily: "'Inter', sans-serif",
-          paddingRight: cfg ? '40px' : '0',
+          paddingRight: (cfg || imageUrl) ? '40px' : '0',
         }}
       >
         {label}
