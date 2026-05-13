@@ -587,6 +587,15 @@ export default function SamplePage() {
           ${wallpaperExtraStyle}
           margin: 0;
           font-family: '${effectiveFont}', sans-serif;
+          /* Enable bounce scroll effect */
+          -webkit-overflow-scrolling: touch;
+          overflow-y: auto;
+        }
+
+        html, body {
+          /* Smooth bounce scroll on iOS */
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-y: auto;
         }
 
         .sample-body {
@@ -600,6 +609,8 @@ export default function SamplePage() {
           padding: 60px 20px 0;
           font-family: '${effectiveFont}', sans-serif;
           position: relative;
+          /* Enable bounce scroll */
+          -webkit-overflow-scrolling: touch;
         }
 
         .sample-card {
@@ -658,47 +669,63 @@ export default function SamplePage() {
           .sample-body {
             padding: 0 !important;
             align-items: stretch;
+            /* Enable bounce scroll effect on mobile */
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
           }
           .sample-card {
             max-width: 100%;
             margin: 0;
             border-radius: 0 !important;
             min-height: 100vh;
+            /* Add extra padding at bottom for bounce scroll */
+            padding-bottom: 60px !important;
           }
           .sample-card > div:first-of-type {
             padding: 24px 16px 0 !important;
           }
           
-          /* Mobile font sizes - smaller than desktop */
+          /* Mobile font sizes - keep desktop sizes */
           .sample-card h1,
           .sample-card [style*="fontSize: 24px"],
           .sample-card [style*="fontSize: 30px"] {
-            font-size: 20px !important;
+            font-size: 24px !important;
           }
           
           .sample-card [style*="fontSize: 17px"] {
-            font-size: 14px !important;
+            font-size: 16px !important;
           }
           
           .sample-card [style*="fontSize: 16px"] {
+            font-size: 15px !important;
+          }
+          
+          /* Link cards BIGGER on mobile */
+          .sample-card [style*="height: 64px"] {
+            height: 58px !important;
+            font-size: 16px !important;
+          }
+          
+          /* Social icons BIGGER on mobile - target the container */
+          .social-icons-override {
+            transform: scale(1.15) !important;
+          }
+          
+          .social-icons-override a {
+            margin: 0 4px !important;
+          }
+          
+          /* Tab buttons */
+          .sample-card [style*="padding: 13px 28px"],
+          .sample-card [style*="padding: 13px 12px"] {
+            padding: 12px 20px !important;
             font-size: 14px !important;
           }
           
-          /* Link cards smaller */
-          .sample-card [style*="height: 64px"] {
-            height: 56px !important;
-          }
-          
-          /* Social icons smaller */
-          .sample-card [style*="width: 28px"][style*="height: 28px"] {
-            width: 22px !important;
-            height: 22px !important;
-          }
-          
-          /* Tab buttons smaller */
-          .sample-card [style*="padding: 13px 28px"] {
-            padding: 11px 24px !important;
-            font-size: 13px !important;
+          /* Avatar size */
+          .sample-card [style*="width: 100px"][style*="height: 100px"] {
+            width: 100px !important;
+            height: 100px !important;
           }
         }
       `}</style>
@@ -711,6 +738,7 @@ export default function SamplePage() {
         padding: '60px 30px 0',
         minHeight: '100vh',
         position: 'relative',
+        WebkitOverflowScrolling: 'touch', // Enable bounce scroll on iOS
       }}>
         {renderPageAnimation()}
         {tintOpacity > 0 && (
