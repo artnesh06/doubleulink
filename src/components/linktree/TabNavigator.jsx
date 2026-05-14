@@ -15,7 +15,7 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
     : cornerRadius === '16px' ? '16px'
     : '999px' // full
 
-  const tabs = ['links', 'shop', 'collection']
+  const tabs = ['links', 'shop', 'collections']
   const activeIndex = tabs.indexOf(activeTab)
   
   // Calculate pill position - each tab is 33.333% width
@@ -51,7 +51,7 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
           <button key={tab} onClick={() => onSwitch(tab)} className="lt-tab-btn" style={{
             position: 'relative', 
             zIndex: 1,
-            padding: '13px 8px', 
+            padding: '13px 8px',
             borderRadius: pillRadius,
             fontSize: '13px', 
             fontWeight: 600,
@@ -65,6 +65,7 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
+            letterSpacing: tab !== 'links' ? '-0.3px' : '0',
           }}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
