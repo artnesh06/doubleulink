@@ -30,7 +30,7 @@ const defaultState = {
   themeId: 'chrome',
   wallpaper: { ...defaultBgLayer, color: '#1a1a1a' },
   cardBg: { ...defaultBgLayer, color: '#242424' },
-  textSettings: { font: 'Inter', color: '#ffffff', titleSize: 'small' },
+  textSettings: { font: 'Inter', color: '#ffffff', titleSize: 'small', titleSizePx: 24 },
   buttonSettings: { style: 'solid', roundness: 'full', shadow: 'none', color: '#171717', textColor: '#ffffff' },
   customColors: { background: '#1a1a1a', buttons: '#171717', buttonText: '#ffffff', pageText: '#ffffff', titleText: '#ffffff' },
   spacing: { 
@@ -91,15 +91,54 @@ export function usePageState() {
 
   function setThemeId(id) {
     const newTheme = THEMES.find(t => t.id === id) || THEMES[0]
+    const themeCardLayer = newTheme.cardLayer || {
+      style: 'fill',
+      color: newTheme.preview?.card || newTheme.cardBg || newTheme.pageBg,
+      imageUrl: null,
+      effect: 'none',
+      tint: 0,
+      animation: { id: 'none', params: {} },
+    }
+    const themeWallpaperLayer = newTheme.wallpaperLayer || {
+      style: 'fill',
+      color: newTheme.pageBg,
+      imageUrl: null,
+      effect: 'none',
+      tint: 0,
+      animation: { id: 'none', params: {} },
+    }
+    const cardColors = themeCardLayer.colors || {}
+    const buttonTextColor = newTheme.linkTextColor || newTheme.textColor
+
     setState(prev => ({
       ...prev,
       themeId: id,
-      wallpaper: { ...prev.wallpaper, color: newTheme.pageBg },
-      textSettings: { ...prev.textSettings, color: newTheme.textColor },
-      buttonSettings: { ...prev.buttonSettings, color: newTheme.linkBg, textColor: newTheme.textColor },
+      wallpaper: {
+        ...defaultBgLayer,
+        ...themeWallpaperLayer,
+        colors: { ...defaultBgLayer.colors, ...(themeWallpaperLayer.colors || {}) },
+      },
+      cardBg: {
+        ...defaultBgLayer,
+        ...themeCardLayer,
+        colors: { ...defaultBgLayer.colors, ...cardColors },
+      },
+      textSettings: {
+        ...prev.textSettings,
+        font: newTheme.font || prev.textSettings.font,
+        color: newTheme.textColor,
+        titleSize: newTheme.titleSize || prev.textSettings.titleSize,
+      },
+      buttonSettings: {
+        ...prev.buttonSettings,
+        style: newTheme.buttonStyle || prev.buttonSettings.style,
+        color: newTheme.linkBg,
+        textColor: buttonTextColor,
+      },
+      cornerRadius: newTheme.cornerRadius || prev.cornerRadius,
       customColors: {
         background: newTheme.pageBg, buttons: newTheme.linkBg,
-        buttonText: newTheme.textColor, pageText: newTheme.textColor, titleText: newTheme.textColor,
+        buttonText: buttonTextColor, pageText: newTheme.textColor, titleText: newTheme.textColor,
       },
     }))
   }

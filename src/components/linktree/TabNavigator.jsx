@@ -1,38 +1,59 @@
-export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius = '999px' }) {
-  const tabBg          = theme?.tabBg          || '#767676'
-  const tabActive      = theme?.tabActive      || '#111111'
-  const tabActiveText  = theme?.tabActiveText  || '#ffffff'
-  const tabInactiveText= theme?.tabInactiveText|| '#000000'
+export default function TabNavigator({
+  activeTab,
+  onSwitch,
+  theme,
+  cornerRadius = '999px',
+  scale = 1,
+  fontSize = 13,
+  tabGap = 0,
+  paddingY = 13,
+  settings = {},
+}) {
+  const styleType = settings.style || 'solid'
+  const tabBg          = settings.bgColor || theme?.tabBg || '#767676'
+  const tabActive      = settings.activeColor || theme?.tabActive || '#111111'
+  const tabActiveText  = settings.activeTextColor || theme?.tabActiveText || '#ffffff'
+  const tabInactiveText= settings.inactiveTextColor || theme?.tabInactiveText || '#000000'
+  const borderWidth = settings.borderWidth || 0
+  const borderColor = settings.borderColor || 'rgba(255,255,255,0.12)'
+  const blurAmount = settings.blur || 12
+  const visibleTabs = ['links', 'shop', 'collections'].filter(tab => !settings.hiddenTabs?.[tab])
 
-  // Map cornerRadius to actual tab radius values
-  const outerRadius = cornerRadius === '0px' ? '6px'
-    : cornerRadius === '8px'  ? '12px'
-    : cornerRadius === '16px' ? '20px'
-    : '999px' // full
+  const numericRadius = Number.parseFloat(cornerRadius) || 0
+  const outerRadiusValue = Math.max(10, Math.min(999, numericRadius + 14))
+  const pillRadiusValue = Math.max(8, Math.min(999, numericRadius + 8))
+  const outerRadius = `${outerRadiusValue}px`
+  const pillRadius = `${pillRadiusValue}px`
 
-  const pillRadius = cornerRadius === '0px' ? '4px'
-    : cornerRadius === '8px'  ? '10px'
-    : cornerRadius === '16px' ? '16px'
-    : '999px' // full
+  const tabs = visibleTabs
+  if (tabs.length === 0) return null
 
-  const tabs = ['links', 'shop', 'collections']
-  const activeIndex = tabs.indexOf(activeTab)
+  const activeIndex = Math.max(0, tabs.indexOf(activeTab))
+  const tabCount = tabs.length
   
   // Calculate pill position - each tab is 33.333% width
-  const pillTransform = `translateX(${activeIndex * 100}%)`
+  const pillTransform = `translateX(calc(${activeIndex * 100}% + ${activeIndex * tabGap}px))`
+  const shellBackground = styleType === 'outline' ? 'transparent'
+    : styleType === 'glass' ? 'rgba(255,255,255,0.10)'
+    : styleType === 'blur' ? 'rgba(255,255,255,0.07)'
+    : tabBg
+  const activeBackground = styleType === 'outline' ? 'transparent' : tabActive
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
       <div style={{
         position: 'relative', 
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '0',
-        background: tabBg, 
+        gridTemplateColumns: `repeat(${tabCount}, 1fr)`,
+        gap: `${tabGap}px`,
+        background: shellBackground, 
+        border: `${styleType === 'outline' ? Math.max(1, borderWidth || 1) : borderWidth}px solid ${borderColor}`,
         borderRadius: outerRadius,
         padding: '3px', 
         width: '100%',
-        maxWidth: '500px',
+        maxWidth: `${Math.round(500 * scale)}px`,
+        backdropFilter: ['glass', 'blur'].includes(styleType) ? `blur(${blurAmount}px)` : 'none',
+        WebkitBackdropFilter: ['glass', 'blur'].includes(styleType) ? `blur(${blurAmount}px)` : 'none',
       }}>
         {/* Sliding pill */}
         <div style={{
@@ -41,8 +62,9 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
           left: '3px',
           right: '3px',
           height: 'calc(100% - 6px)', 
-          width: 'calc((100% - 6px) / 3)',
-          background: tabActive, 
+          width: `calc((100% - 6px - ${tabGap * Math.max(0, tabCount - 1)}px) / ${tabCount})`,
+          background: activeBackground, 
+          border: styleType === 'outline' ? `${Math.max(1, borderWidth || 1)}px solid ${borderColor}` : 'none',
           borderRadius: pillRadius,
           transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           transform: pillTransform,
@@ -51,9 +73,9 @@ export default function TabNavigator({ activeTab, onSwitch, theme, cornerRadius 
           <button key={tab} onClick={() => onSwitch(tab)} className="lt-tab-btn" style={{
             position: 'relative', 
             zIndex: 1,
-            padding: '13px 8px',
+            padding: `${Math.round(paddingY * scale)}px ${Math.max(8, Math.round(8 * scale))}px`,
             borderRadius: pillRadius,
-            fontSize: '13px', 
+            fontSize: `${Math.round(fontSize * scale)}px`, 
             fontWeight: 600,
             cursor: 'pointer', 
             border: 'none',

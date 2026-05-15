@@ -243,7 +243,7 @@ export default function LinktreePage({ isOwner = false }) {
   const effectiveCardBgStyle = getCardBg(state.cardBg, theme)
   const effectiveFont      = state.textSettings.font || 'Inter'
   const effectiveTextColor = state.textSettings.color || theme.textColor
-  const effectiveTitleSize = state.textSettings.titleSize === 'large' ? '30px' : '24px'
+  const effectiveTitleSize = `${state.textSettings.titleSizePx || (state.textSettings.titleSize === 'large' ? 30 : 24)}px`
 
   // Extra CSS for wallpaper styles
   let wallpaperExtraStyle = ''

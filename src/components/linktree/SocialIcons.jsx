@@ -141,13 +141,13 @@ const SOCIAL_ICONS = {
 }
 
 // Icon component with proper SVG - monochrome style
-function SocialIcon({ platformKey, platform, iconColor }) {
+function SocialIcon({ platformKey, iconColor, size }) {
   const icon = SOCIAL_ICONS[platformKey] || SOCIAL_ICONS.default
   
   return (
     <div style={{
-      width: '28px',
-      height: '28px',
+      width: `${size}px`,
+      height: `${size}px`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -158,7 +158,7 @@ function SocialIcon({ platformKey, platform, iconColor }) {
   )
 }
 
-export default function SocialIcons({ profile, theme, hoverZoom = 1, className = '' }) {
+export default function SocialIcons({ profile, theme, hoverZoom = 1, className = '', size = 28, gap = 16 }) {
   const iconColor = theme?.textColor || '#ffffff'
   
   const linkStyle = {
@@ -168,7 +168,7 @@ export default function SocialIcons({ profile, theme, hoverZoom = 1, className =
 
   // Get all active social links (that have URLs)
   const activeSocials = Object.entries(SOCIAL_PLATFORMS)
-    .filter(([key, platform]) => profile[key] && profile[key].trim() !== '')
+    .filter(([key]) => profile[key] && profile[key].trim() !== '')
   
   // No limit - show all active socials
   console.log('Active socials:', activeSocials.length, activeSocials.map(([k]) => k))
@@ -192,7 +192,7 @@ export default function SocialIcons({ profile, theme, hoverZoom = 1, className =
   return (
     <div className={className} style={{ 
       display: 'flex', 
-      gap: '16px', 
+      gap: `${gap}px`, 
       margin: '24px 0 32px', 
       alignItems: 'center', 
       justifyContent: 'center',
@@ -209,7 +209,7 @@ export default function SocialIcons({ profile, theme, hoverZoom = 1, className =
           onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           title={platform.name}
         >
-          <SocialIcon platformKey={key} platform={platform} iconColor={iconColor} />
+          <SocialIcon platformKey={key} iconColor={iconColor} size={size} />
         </a>
       ))}
     </div>

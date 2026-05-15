@@ -1,36 +1,37 @@
 import { useState, useEffect } from 'react'
 
-// Mock NFT data - nanti diganti dengan real wallet data
-const MOCK_NFTS = [
-  {
-    id: 1,
-    name: 'Bored Ape #1234',
-    image: 'https://i.seadn.io/gae/Ju9CkWtV-1Okvf45wo8UctR-M9He2PjILP0oOvxE89AyiPPGtrR3gysu1Zgy0hjd2xKIgjJJtWIc0ybj4Vd7wv8t3pxDGHoJBzDB?auto=format&w=384',
-    collection: 'Bored Ape Yacht Club',
-    tokenId: '1234',
-  },
-  {
-    id: 2,
-    name: 'Azuki #5678',
-    image: 'https://i.seadn.io/gae/H8jOCJuQokNqGBpkBN5wk1oZwO7LM8bNnrHCaekV2nKjnCqw6UB5oaH8XyNeBDj6bA_n1mjejzhFQUP3O1NfjFLHr3FOaeHcTOOT?auto=format&w=384',
-    collection: 'Azuki',
-    tokenId: '5678',
-  },
-  {
-    id: 3,
-    name: 'Doodle #9012',
-    image: 'https://i.seadn.io/gae/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ?auto=format&w=384',
-    collection: 'Doodles',
-    tokenId: '9012',
-  },
-  {
-    id: 4,
-    name: 'Clone X #3456',
-    image: 'https://i.seadn.io/gae/XN0XuD8Uh3jyRWNtPTFeXJg_ht8m5ofDx6aHklOiy4amhFuWUa0JaR6It49AH8tlnYS386Q0TW_-Lmedn0UET_ko1a3CbJGeu5iHMg?auto=format&w=384',
-    collection: 'Clone X',
-    tokenId: '3456',
-  },
-]
+const CONTRACT = '0x3b9b467ef39310cac0318fd766b805d2cb2143d0'
+const TOKEN_IDS = [1, 42, 7, 69, 13, 88]
+
+// Fetch NFT image from OpenSea metadata
+async function fetchNFTImage(tokenId) {
+  try {
+    // Try OpenSea API v2 (no key needed for basic metadata)
+    const res = await fetch(`https://api.opensea.io/api/v2/chain/ethereum/contract/${CONTRACT}/nfts/${tokenId}`, {
+      headers: { 'accept': 'application/json' }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return {
+        id: tokenId,
+        name: data.nft?.name || `Punkers #${tokenId}`,
+        image: data.nft?.image_url || data.nft?.display_image_url || null,
+        collection: 'Punkers NFT',
+        tokenId: String(tokenId),
+        opensea: `https://opensea.io/assets/ethereum/${CONTRACT}/${tokenId}`,
+      }
+    }
+  } catch {}
+  // Fallback — use the known image URL pattern
+  return {
+    id: tokenId,
+    name: `Punkers #${String(tokenId).padStart(3, '0')}`,
+    image: `https://i2c.seadn.io/ethereum/${CONTRACT}/2dfc51cd698cb169a8e08d9cb38f80/f92dfc51cd698cb169a8e08d9cb38f80.png?w=500`,
+    collection: 'Punkers NFT',
+    tokenId: String(tokenId),
+    opensea: `https://opensea.io/assets/ethereum/${CONTRACT}/${tokenId}`,
+  }
+}
 
 export default function CollectionGrid({ 
   theme, 
@@ -43,13 +44,21 @@ export default function CollectionGrid({
 }) {
   const [nfts, setNfts] = useState([])
   const [walletConnected, setWalletConnected] = useState(false)
-  const [stakedNfts, setStakedNfts] = useState({}) // { nftId: { progress: 0-100, startTime: timestamp } }
+  const [loadingNfts, setLoadingNfts] = useState(false)
+  const [stakedNfts, setStakedNfts] = useState({})
   const [claimedPoints, setClaimedPoints] = useState(0)
 
-  // Simulate wallet connection
-  const handleConnectWallet = () => {
+  // Connect wallet and fetch NFTs
+  const handleConnectWallet = async () => {
     setWalletConnected(true)
-    setNfts(MOCK_NFTS)
+    setLoadingNfts(true)
+    try {
+      const results = await Promise.all(TOKEN_IDS.map(id => fetchNFTImage(id)))
+      setNfts(results.filter(n => n !== null))
+    } catch {
+      setNfts([])
+    }
+    setLoadingNfts(false)
   }
 
   // Stake NFT
@@ -224,37 +233,21 @@ export default function CollectionGrid({
         marginBottom: '24px',
         padding: '0 4px',
       }}>
-        <h3 style={{
-          fontSize: '20px',
-          fontWeight: 700,
-          color: textColor,
-          fontFamily: `'${font}', sans-serif`,
-        }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: textColor, fontFamily: `'${font}', sans-serif` }}>
           Your Collection
         </h3>
-        
-        <div style={{
-          padding: '8px 16px',
-          borderRadius: cornerRadius,
-          background: 'rgba(255,215,0,0.15)',
-          border: '1px solid rgba(255,215,0,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd700">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-          </svg>
-          <span style={{
-            fontSize: '16px',
-            fontWeight: 700,
-            color: '#ffd700',
-            fontFamily: `'${font}', sans-serif`,
-          }}>
-            {claimedPoints} W
-          </span>
+        <div style={{ padding: '8px 16px', borderRadius: cornerRadius, background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd700"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: '#ffd700', fontFamily: `'${font}', sans-serif` }}>{claimedPoints} W</span>
         </div>
       </div>
+
+      {/* Loading */}
+      {loadingNfts && (
+        <div style={{ textAlign: 'center', padding: '40px', color: textColor, opacity: 0.5 }}>
+          <div style={{ fontSize: '14px', fontFamily: `'${font}', sans-serif` }}>Loading NFTs...</div>
+        </div>
+      )}
 
       {/* NFT Grid - 3 per row */}
       <div style={{
@@ -331,22 +324,20 @@ export default function CollectionGrid({
 
               {/* NFT Info */}
               <div style={{ padding: '16px' }}>
-                <h4 style={{
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  color: textColor,
-                  marginBottom: '4px',
-                  fontFamily: `'${font}', sans-serif`,
-                }}>
-                  {nft.name}
-                </h4>
-                <p style={{
-                  fontSize: '13px',
-                  color: textColor,
-                  opacity: 0.6,
-                  marginBottom: '16px',
-                  fontFamily: `'${font}', sans-serif`,
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 600, color: textColor, fontFamily: `'${font}', sans-serif`, margin: 0 }}>
+                    {nft.name}
+                  </h4>
+                  <a href={nft.opensea} target="_blank" rel="noopener noreferrer" style={{ color: textColor, opacity: 0.4, flexShrink: 0, marginLeft: '6px' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '0.4'}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </a>
+                </div>
+                <p style={{ fontSize: '12px', color: textColor, opacity: 0.5, marginBottom: '12px', fontFamily: `'${font}', sans-serif` }}>
                   {nft.collection}
                 </p>
 

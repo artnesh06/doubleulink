@@ -319,46 +319,104 @@ export default function RightPanel({
             <div>
               <p style={ttl}>Theme</p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 12px' }}>
                 {THEMES.map(th => {
-                  // When panel is light theme, override dark card backgrounds to light
-                  const cardBgOverride = isLight && th.preview.bg < '#888888'
-                    ? (th.id === activeThemeId ? '#ffffff' : '#e8e8e8')
-                    : th.pageBg
-                  const labelColor = isLight && th.preview.bg < '#888888'
-                    ? '#111111'
-                    : th.preview.text
+                  const active = activeThemeId === th.id
+                  const previewBg = th.preview.image
+                    ? `linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.24) 100%), url(${th.preview.image}) center/cover`
+                    : th.preview.bg
+                  const previewText = th.preview.text || panelText
+                  const previewBtn = th.preview.btn || th.linkBg
+                  const previewBtnText = th.preview.textOnButton || th.linkTextColor || th.textColor
 
                   return (
-                  <button
-                    key={th.id}
-                    onClick={() => onThemeChange(th.id)}
-                    style={{
-                      background: cardBgOverride,
-                      border: activeThemeId === th.id
-                        ? '2px solid ' + (isLight ? '#111111' : '#ffffff')
-                        : '2px solid ' + (isLight ? '#cccccc' : '#333333'),
-                      borderRadius: '14px',
-                      padding: '14px 12px 10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      outline: 'none',
-                      transition: 'border 0.15s',
-                      minHeight: '80px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <div>
-                      <div style={{ width: '100%', height: '6px', background: isLight ? '#cccccc' : th.preview.btn, borderRadius: '3px', marginBottom: '4px', opacity: 0.8 }} />
-                      <div style={{ width: '55%', height: '4px', background: isLight ? '#cccccc' : th.preview.btn, borderRadius: '2px', opacity: 0.4 }} />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-                      <span style={{ fontSize: '12px', color: labelColor, fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>{th.name}</span>
-                      {activeThemeId === th.id && <span style={{ fontSize: '14px', color: labelColor }}>✓</span>}
-                    </div>
-                  </button>
+                    <button
+                      key={th.id}
+                      onClick={() => onThemeChange(th.id)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        outline: 'none',
+                        fontFamily: 'Inter, sans-serif',
+                      }}
+                    >
+                      <div style={{
+                        position: 'relative',
+                        minHeight: '126px',
+                        borderRadius: '18px',
+                        overflow: 'hidden',
+                        background: previewBg,
+                        border: active
+                          ? '3px solid ' + (isLight ? '#111111' : '#ffffff')
+                          : '1.5px solid ' + (isLight ? '#d5d5d5' : '#333333'),
+                        boxShadow: active
+                          ? `0 0 0 2px ${isLight ? '#ffffff' : panelBg}, 0 8px 24px rgba(0,0,0,0.22)`
+                          : 'none',
+                        transition: 'border 0.15s, box-shadow 0.15s, transform 0.15s',
+                      }}>
+                        <div style={{
+                          position: 'absolute',
+                          top: '14px',
+                          left: '14px',
+                          color: previewText,
+                          fontSize: '35px',
+                          lineHeight: 1,
+                          fontWeight: th.font === 'Playfair Display' ? 700 : 600,
+                          fontFamily: th.font ? `'${th.font}', serif` : 'Inter, sans-serif',
+                        }}>
+                          Aa
+                        </div>
+                        <div style={{
+                          position: 'absolute',
+                          left: '18px',
+                          right: '18px',
+                          bottom: '20px',
+                          height: '34px',
+                          borderRadius: '999px',
+                          background: previewBtn,
+                          color: previewBtnText,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          boxShadow: th.preview.image ? '0 8px 22px rgba(0,0,0,0.22)' : 'none',
+                        }}>
+                          Links
+                        </div>
+                        {active && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '9px',
+                            right: '9px',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: isLight ? '#111111' : '#ffffff',
+                            color: isLight ? '#ffffff' : '#111111',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '13px',
+                            fontWeight: 800,
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                      <span style={{
+                        display: 'block',
+                        color: active ? panelText : panelSub,
+                        fontSize: '13px',
+                        fontWeight: active ? 700 : 500,
+                        marginTop: '7px',
+                      }}>
+                        {th.name}
+                      </span>
+                    </button>
                   )
                 })}
               </div>

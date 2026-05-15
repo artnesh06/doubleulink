@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { SOCIAL_PLATFORMS, SOCIAL_CATEGORIES } from '../../data/socialIcons'
 
-export default function EditPopup({ type, data, position, onClose, onUpdate, theme, cardBgStyle, cardRadius, maxHeight }) {
+export default function EditPopup({ type, data, onClose, onUpdate, cardBgStyle, cardRadius, maxHeight }) {
   const [formData, setFormData] = useState(data)
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -23,13 +23,208 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
     onUpdate(newData)
   }
 
+  function updateTabHidden(tab, checked) {
+    handleLiveUpdate({
+      hiddenTabs: {
+        ...(formData.hiddenTabs || {}),
+        [tab]: checked,
+      },
+    })
+  }
+
+  function getColorValue(value, fallback) {
+    return /^#[0-9a-fA-F]{6}$/.test(value || '') ? value : fallback
+  }
+
+  const panelInputStyle = {
+    width: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
+    padding: '14px 16px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.055)',
+    color: panelTextColor,
+    fontSize: '14px',
+    fontWeight: 700,
+  }
+
+  const panelFieldLabelStyle = {
+    fontSize: '13px',
+    color: panelSecondaryColor,
+    fontWeight: 700,
+  }
+
+  function renderTabToggle(label, tab) {
+    return (
+      <button
+        type="button"
+        onClick={() => updateTabHidden(tab, !formData.hiddenTabs?.[tab])}
+        style={{
+          width: '100%',
+          padding: '14px 16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(255,255,255,0.055)',
+          color: panelTextColor,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: 800,
+          textAlign: 'left',
+        }}
+      >
+        <span style={{
+          width: '18px',
+          height: '18px',
+          borderRadius: '4px',
+          border: '2px solid rgba(255,255,255,0.78)',
+          background: formData.hiddenTabs?.[tab] ? '#69f493' : '#ffffff',
+          boxShadow: formData.hiddenTabs?.[tab] ? 'inset 0 0 0 4px #1f1f1f' : 'none',
+          flexShrink: 0,
+        }} />
+        {label}
+      </button>
+    )
+  }
+
+  function renderTabColor(label, field, fallback) {
+    const value = formData[field] || fallback
+
+    return (
+      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <span style={panelFieldLabelStyle}>{label}</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '64px minmax(0, 1fr)', gap: '10px', minWidth: 0 }}>
+          <input
+            type="color"
+            value={getColorValue(value, fallback)}
+            onChange={(e) => handleLiveUpdate({ [field]: e.target.value })}
+            style={{
+              width: '64px',
+              height: '48px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.055)',
+              padding: '8px',
+              cursor: 'pointer',
+            }}
+          />
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => handleLiveUpdate({ [field]: e.target.value })}
+            style={panelInputStyle}
+          />
+        </div>
+      </label>
+    )
+  }
+
+  function renderTabSlider(label, field, min, max, suffix = 'px') {
+    const value = formData[field] ?? 0
+
+    return (
+      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <span style={{ ...panelFieldLabelStyle, display: 'flex', justifyContent: 'space-between' }}>
+          {label}
+          <span style={{ color: panelTertiaryColor }}>{value}{suffix}</span>
+        </span>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => handleLiveUpdate({ [field]: parseInt(e.target.value) })}
+          style={{ width: '100%' }}
+        />
+      </label>
+    )
+  }
+
+  const avatarLayoutOptions = [
+    { id: 'classic', label: 'Classic' },
+    { id: 'shape', label: 'Shape' },
+  ]
+
+  const avatarShapeOptions = [
+    { id: 'flower', label: 'Flower' },
+    { id: 'oval', label: 'Oval' },
+    { id: 'rounded', label: 'Rounded' },
+    { id: 'burst', label: 'Burst' },
+  ]
+
+  function renderAvatarPreview(layout = 'classic', shape = formData.avatarShape || 'flower') {
+    const src = formData.avatarUrl
+    const shapeClass = `avatar-style-shape-${shape}`
+    const image = src ? <img src={src} alt="" /> : <span />
+
+    if (layout === 'banner') {
+      return (
+        <div className="avatar-style-banner">
+          <div>{image}</div>
+          <i>{image}</i>
+        </div>
+      )
+    }
+
+    if (layout === 'hero') {
+      return <div className="avatar-style-hero">{image}<b /></div>
+    }
+
+    if (layout === 'cutout') {
+      return <div className="avatar-style-cutout">{image}<b /></div>
+    }
+
+    if (layout === 'shape') {
+      return <div className={`avatar-style-shape ${shapeClass}`}>{image}</div>
+    }
+
+    return <div className="avatar-style-classic">{image}</div>
+  }
+
+  function renderAvatarLayoutOption(option) {
+    const currentLayout = ['classic', 'shape'].includes(formData.avatarLayout) ? formData.avatarLayout : 'classic'
+    const active = currentLayout === option.id
+
+    return (
+      <button
+        key={option.id}
+        type="button"
+        className={active ? 'avatar-style-option active' : 'avatar-style-option'}
+        onClick={() => handleLiveUpdate({ avatarLayout: option.id })}
+      >
+        {['hero', 'banner', 'cutout', 'shape'].includes(option.id) && <em>⚡</em>}
+        <div className="avatar-style-preview">{renderAvatarPreview(option.id)}</div>
+        <span>{option.label}</span>
+      </button>
+    )
+  }
+
+  function renderAvatarShapeOption(option) {
+    const active = (formData.avatarShape || 'flower') === option.id
+
+    return (
+      <button
+        key={option.id}
+        type="button"
+        className={active ? 'avatar-shape-option active' : 'avatar-shape-option'}
+        onClick={() => handleLiveUpdate({ avatarLayout: 'shape', avatarShape: option.id })}
+      >
+        <div className={`avatar-shape-swatch avatar-style-shape-${option.id}`} />
+        <span>{option.label}</span>
+      </button>
+    )
+  }
+
   // Calculate popup position - side panel (desktop) or bottom sheet (mobile)
   const popupStyle = {
     position: 'relative',
     width: '100%',
     height: maxHeight > 0 ? `${maxHeight}px` : 'auto',
     maxHeight: maxHeight > 0 ? `${maxHeight}px` : 'none',
-    padding: '28px 24px',
+    padding: '24px 22px',
     overflowY: 'auto',
     overflowX: 'hidden',
     ...cardBgStyle,
@@ -45,6 +240,21 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
             <div style={{ marginBottom: '8px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: panelTextColor, letterSpacing: '-0.5px' }}>Edit Avatar</h3>
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', marginTop: '16px' }} />
+            </div>
+
+            <div className="avatar-style-panel">
+              <span className="avatar-style-label">PFP layout</span>
+              <div className="avatar-style-grid">
+                {avatarLayoutOptions.map(renderAvatarLayoutOption)}
+              </div>
+              {(['classic', 'shape'].includes(formData.avatarLayout) ? formData.avatarLayout : 'classic') === 'shape' && (
+                <>
+                  <span className="avatar-style-label">Shape</span>
+                  <div className="avatar-shape-grid">
+                    {avatarShapeOptions.map(renderAvatarShapeOption)}
+                  </div>
+                </>
+              )}
             </div>
             
             {/* Avatar URL Section */}
@@ -280,6 +490,107 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
               }}
             >
               Done
+            </button>
+          </div>
+        )
+
+      case 'subtitle':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ marginBottom: '8px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: panelTextColor, letterSpacing: '-0.5px' }}>Edit Sub Title</h3>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', marginTop: '16px' }} />
+            </div>
+
+            {/* Text */}
+            <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Text</span>
+                <input
+                  type="text"
+                  value={formData.label || ''}
+                  onChange={(e) => handleLiveUpdate({ label: e.target.value })}
+                  placeholder="Section name..."
+                  style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: panelTextColor, fontSize: '13px' }}
+                />
+              </label>
+            </div>
+
+            {/* Font & Size */}
+            <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Font</span>
+                <select
+                  value={formData.subtitleFont || ''}
+                  onChange={(e) => handleLiveUpdate({ subtitleFont: e.target.value || null })}
+                  style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: panelTextColor, fontSize: '13px', cursor: 'pointer' }}
+                >
+                  <option value="">Use Global Font</option>
+                  <option value="Inter">Inter</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Space Mono">Space Mono</option>
+                  <option value="DM Sans">DM Sans</option>
+                  <option value="Bebas Neue">Bebas Neue</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Size</span>
+                  <span style={{ fontSize: '12px', color: '#00ff88', fontWeight: 600 }}>{formData.subtitleSize || 11}px</span>
+                </div>
+                <input type="range" min="9" max="24" value={formData.subtitleSize || 11} onChange={(e) => handleLiveUpdate({ subtitleSize: parseInt(e.target.value) })} style={{ width: '100%' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: panelTertiaryColor }}>
+                  <span>9px</span><span>24px</span>
+                </div>
+              </label>
+            </div>
+
+            {/* Color & Opacity */}
+            <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Color</span>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input type="color" value={formData.subtitleColor || '#ffffff'} onChange={(e) => handleLiveUpdate({ subtitleColor: e.target.value })} style={{ width: '60px', height: '36px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }} />
+                  <button onClick={() => handleLiveUpdate({ subtitleColor: null })} style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: panelSecondaryColor, fontSize: '12px', cursor: 'pointer' }}>Use Global Color</button>
+                </div>
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Opacity</span>
+                  <span style={{ fontSize: '12px', color: '#00ff88', fontWeight: 600 }}>{Math.round((formData.subtitleOpacity ?? 0.45) * 100)}%</span>
+                </div>
+                <input type="range" min="0.1" max="1" step="0.05" value={formData.subtitleOpacity ?? 0.45} onChange={(e) => handleLiveUpdate({ subtitleOpacity: parseFloat(e.target.value) })} style={{ width: '100%' }} />
+              </label>
+            </div>
+
+            {/* Line & Align */}
+            <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Show Line toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Show Line</span>
+                  <span style={{ fontSize: '11px', color: panelTertiaryColor }}>Horizontal line beside text</span>
+                </div>
+                <button
+                  onClick={() => handleLiveUpdate({ subtitleShowLine: !(formData.subtitleShowLine !== false) })}
+                  style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', background: formData.subtitleShowLine !== false ? '#00ff88' : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s ease', flexShrink: 0 }}
+                >
+                  <div style={{ position: 'absolute', top: '3px', left: formData.subtitleShowLine !== false ? '21px' : '3px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s ease' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Delete */}
+            <button
+              onClick={() => {
+                if (formData.onDelete) formData.onDelete(formData.id)
+                onClose()
+              }}
+              style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,59,48,0.4)', background: 'rgba(255,59,48,0.1)', color: '#ff3b30', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}
+            >
+              Delete Sub Title
             </button>
           </div>
         )
@@ -1138,6 +1449,141 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
               </div>
             )}
 
+            {/* Arrow Settings */}
+            <div style={{ 
+              padding: '16px',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}>
+              {/* Header + Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Arrow Indicator</span>
+                  <span style={{ fontSize: '11px', color: panelTertiaryColor }}>Show arrows on button edges</span>
+                </div>
+                <button
+                  onClick={() => handleLiveUpdate({ arrowEnabled: !(formData.arrowEnabled !== false) })}
+                  style={{
+                    width: '40px', height: '22px',
+                    borderRadius: '11px',
+                    border: 'none',
+                    background: formData.arrowEnabled !== false ? '#00ff88' : 'rgba(255,255,255,0.15)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: '3px',
+                    left: formData.arrowEnabled !== false ? '21px' : '3px',
+                    width: '16px', height: '16px',
+                    borderRadius: '50%',
+                    background: '#fff',
+                    transition: 'left 0.2s ease',
+                  }} />
+                </button>
+              </div>
+
+              {formData.arrowEnabled !== false && (
+                <>
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+
+                  {/* Arrow type */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 500 }}>Arrow Type</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      {[
+                        { id: 'chevron', label: 'Chevron' },
+                        { id: 'arrow', label: 'Arrow' },
+                        { id: 'double', label: 'Double' },
+                        { id: 'triangle', label: 'Triangle' },
+                      ].map(item => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleLiveUpdate({ arrowType: item.id })}
+                          style={{
+                            padding: '8px',
+                            borderRadius: '6px',
+                            border: (formData.arrowType || 'chevron') === item.id
+                              ? '2px solid #00ff88'
+                              : '1px solid rgba(255,255,255,0.1)',
+                            background: (formData.arrowType || 'chevron') === item.id
+                              ? 'rgba(0,255,136,0.1)'
+                              : 'rgba(255,255,255,0.03)',
+                            color: (formData.arrowType || 'chevron') === item.id ? '#00ff88' : panelSecondaryColor,
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Effect */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 500 }}>Hover Effect</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      {['slide', 'bounce', 'fade', 'grow'].map(effect => (
+                        <button
+                          key={effect}
+                          onClick={() => handleLiveUpdate({ arrowEffect: effect })}
+                          style={{
+                            padding: '8px',
+                            borderRadius: '6px',
+                            border: (formData.arrowEffect || 'slide') === effect
+                              ? '2px solid #00ff88'
+                              : '1px solid rgba(255,255,255,0.1)',
+                            background: (formData.arrowEffect || 'slide') === effect
+                              ? 'rgba(0,255,136,0.1)'
+                              : 'rgba(255,255,255,0.03)',
+                            color: (formData.arrowEffect || 'slide') === effect ? '#00ff88' : panelSecondaryColor,
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            textTransform: 'capitalize',
+                          }}
+                        >
+                          {effect === 'slide' ? '← Slide →' : effect === 'bounce' ? '↔ Bounce' : effect === 'fade' ? '✦ Fade' : '⊕ Grow'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Opacity */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 500 }}>Opacity</span>
+                      <span style={{ fontSize: '12px', color: '#00ff88', fontWeight: 600 }}>
+                        {Math.round((formData.arrowOpacity ?? 0.5) * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.05"
+                      value={formData.arrowOpacity ?? 0.5}
+                      onChange={(e) => handleLiveUpdate({ arrowOpacity: parseFloat(e.target.value) })}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: panelTertiaryColor }}>
+                      <span>10%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button
                 onClick={() => onClose()}
@@ -1182,52 +1628,59 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
           </div>
         )
 
-      case 'social':
+      case 'social': {
         // Get all social platforms and group by category
         const socialEntries = Object.entries(SOCIAL_PLATFORMS)
         const filteredSocials = selectedCategory === 'all' 
           ? socialEntries 
-          : socialEntries.filter(([key, value]) => value.category === selectedCategory)
+          : socialEntries.filter(([, value]) => value.category === selectedCategory)
+        const activeSocialCount = socialEntries.filter(([key]) => formData[key]?.trim()).length
         
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ marginBottom: '8px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: panelTextColor, letterSpacing: '-0.5px' }}>Edit Social Links</h3>
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', marginTop: '16px' }} />
+          <div className="social-editor-panel">
+            <div className="social-editor-header">
+              <div>
+                <p style={{ margin: '0 0 4px', fontSize: '11px', color: panelTertiaryColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Profile
+                </p>
+                <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 750, color: panelTextColor, letterSpacing: '-0.35px' }}>
+                  Social links
+                </h3>
+              </div>
+              <span className="social-count-pill">
+                {activeSocialCount}/{socialEntries.length}
+              </span>
             </div>
             
             {/* Category Filter */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: panelSecondaryColor }}>Filter by Category</span>
+            <div className="social-filter-card">
+              <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Category
+              </span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 style={{
-                  padding: '10px 12px',
+                  padding: '11px 12px',
                   borderRadius: '8px',
                   border: '1px solid rgba(255,255,255,0.1)',
-                  background: 'rgba(255,255,255,0.05)',
+                  background: 'rgba(255,255,255,0.055)',
                   color: panelTextColor,
-                  fontSize: '14px',
+                  fontSize: '13px',
+                  fontWeight: 650,
+                  outline: 'none',
                 }}
               >
                 <option value="all">All Platforms ({socialEntries.length})</option>
                 {Object.entries(SOCIAL_CATEGORIES).map(([key, label]) => {
-                  const count = socialEntries.filter(([k, v]) => v.category === key).length
+                  const count = socialEntries.filter(([, platform]) => platform.category === key).length
                   return <option key={key} value={key}>{label} ({count})</option>
                 })}
               </select>
             </div>
 
             {/* Social Media Inputs */}
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '12px',
-              maxHeight: '400px',
-              overflowY: 'auto',
-              paddingRight: '8px',
-            }}>
+            <div className="social-input-list">
               {filteredSocials.map(([key, platform]) => {
                 // Custom placeholder based on platform type
                 let placeholder = `https://${key}.com/username`
@@ -1237,9 +1690,10 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
                 if (key === 'payment') placeholder = 'https://paypal.me/username'
                 
                 return (
-                  <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span style={{ fontSize: '13px', color: panelSecondaryColor, fontWeight: 500 }}>
-                      {platform.name}
+                  <label key={key} className={formData[key] ? 'social-input-row active' : 'social-input-row'}>
+                    <span className="social-input-label">
+                      <span>{platform.name}</span>
+                      {formData[key] && <span className="social-active-dot" />}
                     </span>
                     <input
                       type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'}
@@ -1247,12 +1701,13 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
                       onChange={(e) => handleLiveUpdate({ [key]: e.target.value })}
                       placeholder={placeholder}
                       style={{
-                        padding: '10px 12px',
+                        padding: '11px 13px',
                         borderRadius: '8px',
-                        border: formData[key] ? '1px solid rgba(0, 255, 136, 0.3)' : '1px solid rgba(255,255,255,0.1)',
-                        background: formData[key] ? 'rgba(0, 255, 136, 0.05)' : 'rgba(255,255,255,0.05)',
+                        border: formData[key] ? '1px solid rgba(105, 244, 147, 0.34)' : '1px solid rgba(255,255,255,0.1)',
+                        background: formData[key] ? 'rgba(105, 244, 147, 0.07)' : 'rgba(255,255,255,0.045)',
                         color: panelTextColor,
-                        fontSize: '14px',
+                        fontSize: '13px',
+                        outline: 'none',
                       }}
                     />
                   </label>
@@ -1260,22 +1715,17 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
               })}
             </div>
 
-            <div style={{ 
-              display: 'flex', 
-              gap: '8px',
-              paddingTop: '8px',
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-            }}>
+            <div className="social-editor-footer">
               <button
                 onClick={() => onClose()}
                 style={{
                   flex: 1,
-                  padding: '12px',
+                  padding: '13px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: '#00ff88',
+                  background: '#69f493',
                   color: '#000',
-                  fontWeight: 600,
+                  fontWeight: 750,
                   cursor: 'pointer',
                   fontSize: '14px',
                 }}
@@ -1294,10 +1744,10 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
                 style={{
                   padding: '12px 16px',
                   borderRadius: '8px',
-                  border: '1px solid rgba(255, 59, 48, 0.4)',
-                  background: 'rgba(255, 59, 48, 0.1)',
-                  color: '#ff3b30',
-                  fontWeight: 600,
+                  border: '1px solid rgba(255, 92, 82, 0.32)',
+                  background: 'rgba(255, 92, 82, 0.1)',
+                  color: '#ff6b5f',
+                  fontWeight: 750,
                   cursor: 'pointer',
                   fontSize: '14px',
                   whiteSpace: 'nowrap',
@@ -1308,6 +1758,7 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
             </div>
           </div>
         )
+      }
 
       case 'wallpaper':
         return (
@@ -1421,22 +1872,73 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
 
       case 'tabs':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: panelTextColor }}>Edit Tab Navigator</h3>
-            
-            <p style={{ fontSize: '13px', color: panelSecondaryColor, margin: 0 }}>
-              Tab styling is currently controlled by the global theme settings. Individual tab customization coming soon!
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: panelTextColor, letterSpacing: '-0.4px' }}>Edit Tabs</h3>
+                <p style={{ fontSize: '13px', color: panelSecondaryColor, margin: '6px 0 0' }}>Visibility, colors, glass, blur, and outline.</p>
+              </div>
+            </div>
+
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              padding: '14px',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.035)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <span style={{ fontSize: '12px', color: panelSecondaryColor, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Visible Tabs</span>
+              {renderTabToggle('Hide Links', 'links')}
+              {renderTabToggle('Hide Shop', 'shop')}
+              {renderTabToggle('Hide Collections', 'collections')}
+            </div>
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              padding: '14px',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.035)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={panelFieldLabelStyle}>Tab style</span>
+                <select
+                  value={formData.style || 'solid'}
+                  onChange={(e) => handleLiveUpdate({ style: e.target.value })}
+                  style={panelInputStyle}
+                >
+                  <option value="solid">Solid</option>
+                  <option value="glass">Glass</option>
+                  <option value="blur">Background blur</option>
+                  <option value="outline">Outline</option>
+                </select>
+              </label>
+
+              {renderTabColor('Background color', 'bgColor', '#3a3a3a')}
+              {renderTabColor('Active color', 'activeColor', '#111111')}
+              {renderTabColor('Active text', 'activeTextColor', '#ffffff')}
+              {renderTabColor('Inactive text', 'inactiveTextColor', '#9a9a9a')}
+
+              {['glass', 'blur'].includes(formData.style) && renderTabSlider('Blur amount', 'blur', 0, 30)}
+              {renderTabSlider('Border width', 'borderWidth', 0, 4)}
+              {renderTabColor('Border color', 'borderColor', '#444444')}
+            </div>
 
             <button
               onClick={() => onClose()}
               style={{
-                padding: '12px',
+                padding: '13px',
                 borderRadius: '8px',
                 border: 'none',
-                background: '#00ff88',
-                color: '#000',
-                fontWeight: 600,
+                background: '#69f493',
+                color: '#111',
+                fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '14px',
               }}
@@ -1641,6 +2143,314 @@ export default function EditPopup({ type, data, position, onClose, onUpdate, the
         .edit-popup {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+
+        .edit-popup input,
+        .edit-popup select,
+        .edit-popup button {
+          font-family: Inter, sans-serif;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+
+        .avatar-style-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding: 14px;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .avatar-style-label {
+          color: ${panelSecondaryColor};
+          font-size: 12px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+
+        .avatar-style-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+          gap: 10px;
+        }
+
+        .avatar-style-option {
+          position: relative;
+          min-height: 132px;
+          border-radius: 8px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.045);
+          color: ${panelSecondaryColor};
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 14px 10px 12px;
+          cursor: pointer;
+          overflow: hidden;
+        }
+
+        .avatar-style-option.active {
+          border: 2px solid ${themeMode === 'bright' ? '#111' : '#fff'};
+          color: ${panelTextColor};
+          background: rgba(255,255,255,0.07);
+        }
+
+        .avatar-style-option em {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 26px;
+          height: 26px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0,0,0,0.45);
+          color: #fff;
+          font-size: 12px;
+          font-style: normal;
+          z-index: 2;
+        }
+
+        .avatar-style-option span {
+          font-size: 14px;
+          font-weight: 750;
+        }
+
+        .avatar-style-preview {
+          width: 100%;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .avatar-style-preview img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .avatar-style-preview > div {
+          position: relative;
+          background: rgba(255,255,255,0.9);
+          overflow: hidden;
+        }
+
+        .avatar-style-classic {
+          width: 54px;
+          height: 54px;
+          border-radius: 999px;
+        }
+
+        .avatar-style-hero {
+          width: 104px;
+          height: 70px;
+          border-radius: 8px;
+        }
+
+        .avatar-style-hero b,
+        .avatar-style-cutout b {
+          position: absolute;
+          inset: 48% 0 0;
+          background: linear-gradient(180deg, transparent, rgba(255,255,255,0.96));
+        }
+
+        .avatar-style-banner {
+          width: 110px;
+          height: 68px;
+          border-radius: 8px;
+        }
+
+        .avatar-style-banner > div {
+          position: absolute;
+          inset: 0;
+          opacity: 0.7;
+        }
+
+        .avatar-style-banner > i {
+          position: absolute;
+          left: 50%;
+          bottom: 6px;
+          width: 42px;
+          height: 42px;
+          transform: translateX(-50%);
+          border-radius: 999px;
+          overflow: hidden;
+          border: 3px solid rgba(255,255,255,0.92);
+          background: #fff;
+          font-style: normal;
+        }
+
+        .avatar-style-cutout {
+          width: 84px;
+          height: 76px;
+          border-radius: 8px;
+          background: transparent !important;
+        }
+
+        .avatar-style-cutout img {
+          object-fit: contain;
+        }
+
+        .avatar-style-shape {
+          width: 96px;
+          height: 62px;
+        }
+
+        .avatar-style-shape-flower {
+          border-radius: 58% 42% 54% 46% / 44% 54% 46% 56%;
+          clip-path: polygon(50% 2%, 66% 18%, 90% 14%, 82% 38%, 98% 52%, 78% 66%, 84% 91%, 58% 83%, 42% 98%, 30% 76%, 6% 82%, 16% 57%, 2% 42%, 26% 32%, 20% 8%);
+        }
+
+        .avatar-style-shape-oval {
+          border-radius: 999px;
+        }
+
+        .avatar-style-shape-rounded {
+          border-radius: 14px;
+        }
+
+        .avatar-style-shape-burst {
+          border-radius: 38% 62% 45% 55% / 52% 38% 62% 48%;
+          clip-path: polygon(50% 0%, 58% 13%, 74% 5%, 77% 22%, 94% 20%, 87% 38%, 100% 50%, 86% 61%, 94% 79%, 76% 77%, 72% 95%, 57% 87%, 50% 100%, 41% 86%, 25% 95%, 22% 76%, 5% 80%, 13% 62%, 0% 50%, 14% 39%, 6% 21%, 25% 23%, 28% 5%, 42% 14%);
+        }
+
+        .avatar-shape-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .avatar-shape-option {
+          min-height: 76px;
+          border-radius: 8px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.045);
+          color: ${panelSecondaryColor};
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
+        }
+
+        .avatar-shape-option.active {
+          border: 2px solid #69f493;
+          color: ${panelTextColor};
+        }
+
+        .avatar-shape-swatch {
+          width: 46px;
+          height: 28px;
+          background: ${themeMode === 'bright' ? '#111' : '#e9e9e9'};
+        }
+
+        .social-editor-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          min-height: 100%;
+        }
+
+        .social-editor-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          padding-right: 38px;
+          margin-bottom: 6px;
+        }
+
+        .social-count-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 54px;
+          height: 28px;
+          padding: 0 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(105, 244, 147, 0.32);
+          background: rgba(105, 244, 147, 0.1);
+          color: #69f493;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .social-filter-card {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 14px;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .social-input-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          overflow-y: auto;
+          padding-right: 4px;
+          max-height: min(430px, calc(100vh - 360px));
+        }
+
+        .social-input-list::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .social-input-list::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.16);
+          border-radius: 999px;
+        }
+
+        .social-input-row {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          padding: 12px;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .social-input-row.active {
+          border-color: rgba(105, 244, 147, 0.22);
+          background: rgba(105, 244, 147, 0.035);
+        }
+
+        .social-input-label {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          color: rgba(255,255,255,0.68);
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .social-active-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #69f493;
+          box-shadow: 0 0 0 3px rgba(105, 244, 147, 0.12);
+        }
+
+        .social-editor-footer {
+          display: flex;
+          gap: 10px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255,255,255,0.1);
+          margin-top: auto;
         }
         
         @media (max-width: 600px) {
